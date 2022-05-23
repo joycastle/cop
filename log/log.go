@@ -33,29 +33,17 @@ const (
 	Log_Path_Stderr = "^&$IJHVZSC8"
 )
 
-var (
-	color_debug = fmt.Sprintf("[%sDEBUG%s] ", blue, reset)
-	color_info  = fmt.Sprintf("[%sINFO%s] ", green, reset)
-	color_warn  = fmt.Sprintf("[%sWARN%s] ", red, reset)
-	color_fatal = fmt.Sprintf("[%sFATAL%s] ", yellow, reset)
-
-	color_close_debug = "[DEBUG] "
-	color_close_info  = "[INFO] "
-	color_close_warn  = "[WARN] "
-	color_close_fatal = "[FATAL] "
-
-	color_debug_using = color_debug
-	color_info_using  = color_info
-	color_warn_using  = color_warn
-	color_fatal_using = color_fatal
-)
+type LogConf struct {
+	LogName    string `yaml:"LogName"`
+	ExpireDays int64  `yaml:"ExpireDays"`
+}
 
 type Logger struct {
 	Logger *log.Logger
 	Fptr   *os.File
 	Fname  string
 
-	fpath      string
+	logName      string
 	colorMap   map[int]string
 	mu         *sync.RWMutex
 	expireDays int64
@@ -63,21 +51,21 @@ type Logger struct {
 	oMu        *sync.Mutex
 }
 
-func NewLogger(path string) *Logger {
+func NewLogger(cfg LogConf) *Logger {
 	l := &Logger{
-		fpath:      path,
+		logName:      cfg.LogName,
 		colorMap:   make(map[int]string),
 		mu:         new(sync.RWMutex),
-		expireDays: 30,
+		expireDays: cfg.ExpireDays,
 		oldFiles:   make(map[int64]string),
 		oMu:        new(sync.Mutex),
 	}
 
 	l.EnableColor()
 
-	if path == Log_Path_Stdout {
+	if cfg.LogName == Log_Path_Stdout {
 		l.Logger = log.New(os.Stdout, "", log.Ldate|log.Lmicroseconds|log.Lshortfile)
-	} else if path == Log_Path_Stderr {
+	} else if cfg.LogName == Log_Path_Stderr {
 		l.Logger = log.New(os.Stderr, "", log.Ldate|log.Lmicroseconds|log.Lshortfile)
 	} else {
 		l.Logger = log.New(os.Stderr, "", log.Ldate|log.Lmicroseconds|log.Lshortfile)
@@ -166,11 +154,11 @@ func (l *Logger) setup_file() {
 		err      error
 	)
 
-	if len(l.fpath) <= 0 {
+	if len(l.logName) <= 0 {
 		return
 	}
 
-	fname, deadline = parse_log_fname(l.fpath)
+	fname, deadline = parse_log_fname(l.logName)
 	if fp, err = open_log_file(fname); err != nil {
 		fp = os.Stdout
 	}

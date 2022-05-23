@@ -7,7 +7,7 @@ import (
 
 func Test_log(t *testing.T) {
 	// t.Fatal("not implemented")
-	log := NewLogger(Log_Path_Stdout)
+	log := NewLogger(LogConf{Log_Path_Stdout, 1})
 	log.Infof("This is Logger:%s", "hello")
 	log.Info("This is Logger", errors.New("Hello"))
 	log.Debugf("This is Logger:%s", "hello")
@@ -17,7 +17,7 @@ func Test_log(t *testing.T) {
 	log.Fatalf("This is Logger:%s", "hello")
 	log.Fatal("This is Logger", errors.New("Hello"))
 
-	log = NewLogger(Log_Path_Stderr).DisableColor()
+	log = NewLogger(LogConf{Log_Path_Stderr, 1}).DisableColor()
 	log.Infof("This is Logger:%s", "hello")
 	log.Info("This is Logger", errors.New("Hello"))
 	log.Debugf("This is Logger:%s", "hello")
@@ -29,7 +29,7 @@ func Test_log(t *testing.T) {
 }
 
 func Benchmark_log(b *testing.B) {
-	log := NewLogger("./log/test.go-*-*-*").EnableColor()
+	log := NewLogger(LogConf{"./log/test.go-*-*-*", 1}).EnableColor()
 	for n := 0; n < b.N; n++ {
 		log.Fatalf("This is Logger:%s", "hello")
 	}
